@@ -1,0 +1,13 @@
+.venv/
+.venv-vllm/
+.claude/
+Qwen3-32B-AWQ/
+
+__pycache__/
+
+.env
+
+data/
+results/old/
+
+scripts/anon_export/dist/
