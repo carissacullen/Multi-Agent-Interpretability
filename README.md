@@ -27,25 +27,44 @@ The activation data and scenario data are hosted on HuggingFace due to size (~2.
 narcbench/
 ├── README.md
 ├── config.py                          # Shared config (model, paths, vLLM settings)
-├── query_oracle_from_npz.py           # Query the Activation Oracle from pre-extracted .npz files
+├── colours.py                         # Shared colour palettes (teal/red/green) for plots
+├── roc_analysis.py                    # Per-tier ROC curves and Recall@1%/5% FPR tables
+├── requirements.txt                   # Pinned Python dependencies
+├── generate.sh                        # Generate eval-aware Core/Transfer/Stego scenarios (needs running vLLM server)
+├── extract.sh                         # Extract activations for the eval-aware scenarios (needs GPU)
 ├── generation/                        # Scenario generation (requires vLLM server)
 │   ├── core.py                        # NARCBench-Core (50 committee deliberation scenarios)
 │   ├── transfer.py                    # NARCBench-Transfer (6 structurally distinct types)
 │   ├── stego.py                       # NARCBench-Stego (steganographic card counting)
+│   ├── core_eval.py                   # Core with an "this is a research evaluation" notice prepended (eval-awareness test)
+│   ├── transfer_eval.py               # Transfer, eval-aware variant
+│   ├── stego_eval.py                  # Stego, eval-aware variant
+│   ├── collusion_instructed_pairs.py  # Contrastive collude/honest pairs (analogue of Instructed-Pairs, Goldowsky-Dill et al.)
+│   ├── judge_informed_test.py         # Stego text monitor: judge briefed on the card-counting threat model
+│   ├── judge_fewshot_test.py          # Stego text monitor: informed judge plus few-shot examples
+│   ├── judge_strongmodel_test.py      # Stego text monitor: stronger hosted judge model via litellm
 │   └── verify_ground_truth.py         # Ground truth verification
 ├── extraction/                        # Activation extraction (requires GPU + model weights)
 │   ├── extract_core.py                # Core activation extraction
 │   ├── extract_transfer.py            # Transfer activation extraction
 │   ├── extract_stego.py               # Stego activation extraction
-│   ├── extract_token_traces.py        # Token-level trace extraction
+│   ├── extract_token_traces.py        # Per-token deception traces (projection onto the probe direction)
 │   └── extract_verdict_activations.py # Verdict Decisions activation extraction (see below)
-├── reproduce/                         # Probe training + evaluation
-│   ├── reproduce_LR.py                # Reproduces Table 1 and Figure 2 (five-method comparison)
-│   ├── reproduce_LR_core_to_verdict.py        # Core-trained probe, zero-shot on Verdict Decisions
-│   └── reproduce_LR_core_to_verdict_no_mutual.py  # Same, excluding mutual-collusion episodes
-└── activation_oracle/                 # Activation Oracle inference
-    ├── extract_oracle.py              # Run NARCBench samples through the oracle from raw text
-    └── query_oracle_from_npz.py       # Query the oracle from pre-extracted .npz files
+└── reproduce/                         # Probe training + evaluation
+    ├── reproduce_LR.py                # Reproduces Table 1 and Figure 2 (five-method comparison, logistic regression probe)
+    ├── reproduce_LR_heldout.py        # LR variant; hyperparameters chosen using only leave-domain-out Core AUROC
+    ├── tune_hyperparams.py            # Staged hyperparameter search for the LR probe (held-out metric only)
+    ├── reproduce_LAT.py               # Same comparison with a LAT (PCA-based) direction
+    ├── reproduce_diffMeans.py         # Same comparison with a difference-of-means direction
+    ├── reproduce_mlp.py               # Same comparison with an MLP probe
+    ├── reproduce_multiHead.py         # Same comparison with a multi-head (PyTorch) probe
+    ├── reproduce_multiLayer.py        # Same comparison with LR over multiple layers
+    ├── reproduce_LR_eval_aware.py     # Core-trained probe, zero-shot on eval-aware Transfer/Stego
+    ├── reproduce_LR_core_to_verdict.py        # Core-trained probe, zero-shot on Verdict Decisions
+    ├── reproduce_LR_core_to_verdict_no_mutual.py  # Same, excluding mutual-collusion episodes
+    ├── reproduce_LR_core_to_exploit_share.py  # Cross-model: Qwen3 Core probe -> gpt-oss-120b Exploit-Share (truncated dims)
+    ├── reproduce_LR_verdict_to_exploit_share.py  # Cross-model: Qwen3 Verdict probe -> gpt-oss-120b Exploit-Share
+    └── comparison_plot.py             # Bar chart comparing two result CSVs
 ```
 
 ## Pipeline
